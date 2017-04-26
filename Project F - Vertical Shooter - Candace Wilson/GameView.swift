@@ -33,7 +33,7 @@ class GameView: SKScene, SKPhysicsContactDelegate
 	{
 		super.sceneDidLoad();
 		
-		let width = view!.frame.size.width;
+		let width = view!.frame.size.width; 
 		let height = view!.frame.size.height;
 		
 		scoreLabel.text  = "Score: \(score)";
