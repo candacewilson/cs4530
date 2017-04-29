@@ -29,46 +29,26 @@ class GameView: SKScene, SKPhysicsContactDelegate
 	var enemySpawnTimer: Timer = Timer();
 	var lives: Int = 3;
 	
-	override func sceneDidLoad()
+	override func didMove(to view: SKView)
 	{
-		super.sceneDidLoad();
-		
-		let width = view!.frame.size.width; 
-		let height = view!.frame.size.height;
+		let width = view.frame.size.width;
+		let height = view.frame.size.height;
 		
 		scoreLabel.text  = "Score: \(score)";
 		scoreLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width/2, height: height/16));
 		scoreLabel.backgroundColor = UIColor(red: 0.6, green: 0.1, blue: 0.1, alpha: 0.3);
-		scoreLabel.font = UIFont(name:"GillSans-UltraBold", size: 20.0);
+		scoreLabel.font = UIFont(name:"GillSans-UltraBold", size: 15.0);
+		scoreLabel.textAlignment = NSTextAlignment.center;
 		scoreLabel.textColor = UIColor.white;
-		view?.addSubview(scoreLabel);
+		view.addSubview(scoreLabel);
 		
 		livesLabel.text  = "Lives Left: \(lives)";
 		livesLabel = UILabel(frame: CGRect(x: width/2, y: 0, width: width/2, height: height/16));
 		livesLabel.backgroundColor = UIColor(red: 0.6, green: 0.1, blue: 0.1, alpha: 0.3);
-		livesLabel.font = UIFont(name:"GillSans-UltraBold", size: 20.0);
+		livesLabel.font = UIFont(name:"GillSans-UltraBold", size: 15.0);
+		livesLabel.textAlignment = NSTextAlignment.center;
 		livesLabel.textColor = UIColor.white;
-		view?.addSubview(livesLabel);
-	}
-	
-	override func didMove(to view: SKView)
-	{
-//		let width = view.frame.size.width;
-//		let height = view.frame.size.height;
-//		
-//		scoreLabel.text  = "Score: \(score)";
-//		scoreLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width/2, height: height/16));
-//		scoreLabel.backgroundColor = UIColor(red: 0.6, green: 0.1, blue: 0.1, alpha: 0.3);
-//		scoreLabel.font = UIFont(name:"GillSans-UltraBold", size: 20.0);
-//		scoreLabel.textColor = UIColor.white;
-//		view.addSubview(scoreLabel);
-//		
-//		livesLabel.text  = "Lives Left: \(lives)";
-//		livesLabel = UILabel(frame: CGRect(x: width/2, y: 0, width: width/2, height: height/16));
-//		livesLabel.backgroundColor = UIColor(red: 0.6, green: 0.1, blue: 0.1, alpha: 0.3);
-//		livesLabel.font = UIFont(name:"GillSans-UltraBold", size: 20.0);
-//		livesLabel.textColor = UIColor.white;
-//		view.addSubview(livesLabel);
+		view.addSubview(livesLabel);
 		
 		var sortedScores : [String : Int] = [:];
 		let HighScoreDefault = UserDefaults.standard;
@@ -164,16 +144,16 @@ class GameView: SKScene, SKPhysicsContactDelegate
 	
 	func CollisionWithAmmo(_ Enemy: SKSpriteNode, Ammo: SKSpriteNode)
 	{
-		Enemy.physicsBody?.categoryBitMask = 0;
+		Ammo.removeFromParent();
 		Enemy.texture = SKTexture(imageNamed: "explosion.png");
-		enemy = Enemy;
 		
 		let fade = SKAction.fadeAlpha(to: 0, duration: 0.5);
 		Enemy.run(fade);
 		
-		Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(EnemyDestroyed), userInfo: nil, repeats: false);
+		enemy = Enemy;
+		enemy.physicsBody?.categoryBitMask = 0;
 		
-		Ammo.removeFromParent();
+		Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(EnemyDestroyed), userInfo: nil, repeats: false);
 		
 		score += 1;
 		scoreLabel.text = "Score: \(score)";
@@ -181,6 +161,8 @@ class GameView: SKScene, SKPhysicsContactDelegate
 	
 	func CollisionWithPlayer(_ Enemy:SKSpriteNode, Player: SKSpriteNode)
 	{
+		player.physicsBody?.categoryBitMask = 0;
+		
 		lives -= 1;
 		livesLabel.text = "Lives Left: \(lives)";
 
@@ -205,10 +187,8 @@ class GameView: SKScene, SKPhysicsContactDelegate
 			let month = calendar.component(.month, from: date);
 			let day = calendar.component(.day, from: date);
 			let hour = calendar.component(.hour, from: date);
-			let minute = calendar.component(.minute, from: date);
-			let second = calendar.component(.second, from: date);
 			
-			let uniquePlayerId: String = String(year) + String(month) + String(day) + String(hour) + String(minute) + String(second);
+			let uniquePlayerId: String = String(year) + String(month) + String(day) + String(hour);
 			let UniquePlayerId = UserDefaults.standard;
 			UniquePlayerId.setValue(uniquePlayerId, forKey: "UniquePlayerId");
 			
@@ -248,6 +228,7 @@ class GameView: SKScene, SKPhysicsContactDelegate
 	{
 		player.texture = SKTexture(imageNamed: "pup.png");
 		ammoSpawnTimer = Timer.scheduledTimer(timeInterval: 0.3, target: self, selector: #selector(SpawnAmmo), userInfo: nil, repeats: true);
+		player.physicsBody?.categoryBitMask = GamePiece.Player;
 	}
 	
 	func EnemyDestroyed()
@@ -260,11 +241,12 @@ class GameView: SKScene, SKPhysicsContactDelegate
 		player.removeFromParent();
 		enemy.removeFromParent();
 		
+		livesLabel.removeFromSuperview();
+		scoreLabel.removeFromSuperview();
+		
 		let gameOverView = GameOverView();
 		gameOverView.viewController = self.viewController;
 		view?.presentScene(gameOverView);
-		livesLabel.removeFromSuperview();
-		scoreLabel.removeFromSuperview();
 	}
 	
 	func SpawnAmmo()

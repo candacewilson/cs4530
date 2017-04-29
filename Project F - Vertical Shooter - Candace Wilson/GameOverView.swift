@@ -13,7 +13,6 @@ class GameOverView : SKScene
 {
 	var HighScores : [String : Int] = [:];
 	var ScoreLabel : UILabel!;
-	var HighScoreLabel : UILabel!;
 	var GameOverLabel : UILabel!;
 	var HighScoresButton : UIButton!;
 	var RestartButton : UIButton!;
@@ -33,8 +32,9 @@ class GameOverView : SKScene
 		BackgroundImage.image = background;
 		
 		GameOverLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width, height: 30));
-		GameOverLabel.center = CGPoint(x: width/1.85, y: width/3);
+		GameOverLabel.center = CGPoint(x: width/2, y: width/6);
 		GameOverLabel.text = "GAME OVER";
+		GameOverLabel.textAlignment = NSTextAlignment.center;
 		GameOverLabel.font = UIFont(name:"GillSans-UltraBold", size: 40.0);
 		GameOverLabel.textColor = UIColor.red;
 		
@@ -47,67 +47,64 @@ class GameOverView : SKScene
 		{
 			HighScores = (HighScoreDefault.dictionary(forKey: "HighScore") as? [String : Int])!;
 		}
-		
-		let UniquePlayerId = UserDefaults.standard;
-		let uniquePlayerId: String = (UniquePlayerId.value(forKey: "UniquePlayerId") as? String)!;
-		
-		var listOfHighScores: String = "";
 
-		if(HighScores.keys.contains(uniquePlayerId) || HighScores.keys.count == 0)
+		let UniquePlayerId = UserDefaults.standard;
+		let uniquePlayerId = (UniquePlayerId.value(forKey: "UniquePlayerId") as? String)!;
+		
+		if(HighScores.count == 0 || HighScores.keys.contains(uniquePlayerId))
 		{
-			let popup = UIAlertController(title: "Congratulations!", message: "You placed in the top 5 scores!", preferredStyle: UIAlertControllerStyle.alert);
-			popup.addTextField { (textField : UITextField) -> Void in
-				textField.placeholder = "Enter your name";
-			};
+			HighScores.removeValue(forKey: uniquePlayerId);
 			
-			let enterButton = UIAlertAction(title: "Enter", style: UIAlertActionStyle.default, handler: { [weak popup] (action) -> Void in
-				self.PlayerName = (popup?.textFields![0])!;
-				self.HighScores[(self.PlayerName.text)!] = Score;
-				self.HighScores.removeValue(forKey: uniquePlayerId);
+			let popup = UIAlertController(title: "Congratulations!", message: "You placed in the top 5 scores!", preferredStyle: .alert);
+			popup.addAction(UIAlertAction(title: "Enter", style: .default, handler: { alert -> Void in
 				
-				HighScoreDefault.setValue(self.HighScores, forKey: "HighScore");
+				self.PlayerName = popup.textFields![0] as UITextField;
 				
-				for(name, score) in (Array(self.HighScores).sorted {$0.1 > $1.1})
+				if(!((self.PlayerName.text?.isEmpty)!))
 				{
-					listOfHighScores = listOfHighScores + "\(name): \(score)\n";
+					self.HighScores[(self.PlayerName.text)!] = Score;
+					HighScoreDefault.setValue(self.HighScores, forKey: "HighScore");
 				}
-				
-				self.HighScoreLabel.text = "High Score:\n\(listOfHighScores)";
+				else
+				{
+					let errorAlert = UIAlertController(title: "Error", message: "Please enter a name", preferredStyle: .alert);
+					errorAlert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: { alert -> Void in
+						self.viewController?.present(popup, animated: true, completion: nil);
+					}))
+					self.viewController?.present(errorAlert, animated: true, completion: nil);
+				}
+			}));
+			
+			popup.addTextField ( configurationHandler: { (textField) -> Void in
+				textField.placeholder = "Enter your name";
 			});
 			
-			popup.addAction(enterButton);
-			
-			self.viewController?.present(popup, animated: true, completion: nil)
+			self.viewController?.present(popup, animated: true, completion: nil);
 		}
 		
-		ScoreLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width, height: 30));
-		ScoreLabel.center = CGPoint(x: width/1.5, y: height/3);
+		ScoreLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width, height: 60));
+		ScoreLabel.center = CGPoint(x: width/2, y: height/3);
 		ScoreLabel.text = "Score: \(Score)";
-		ScoreLabel.font = UIFont(name:"GillSans-UltraBold", size: 20.0);
+		ScoreLabel.textAlignment = NSTextAlignment.center;
+		ScoreLabel.font = UIFont(name:"GillSans-UltraBold", size: 30.0);
 		ScoreLabel.textColor = UIColor.orange;
 		
-		HighScoreLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width, height: 60));
-		HighScoreLabel.center = CGPoint(x: width/1.5, y: height/2);
-		HighScoreLabel.font = UIFont(name:"GillSans-UltraBold", size: 20.0);
-		HighScoreLabel.numberOfLines = 0;
-		HighScoreLabel.textColor = UIColor.green;
-		
 		HighScoresButton = UIButton(frame: CGRect(x: 0, y: 0, width: width, height: 30));
-		HighScoresButton.center = CGPoint(x: width/2, y: width + width/2);
+		HighScoresButton.center = CGPoint(x: width/2, y: height - (height/4));
 		HighScoresButton.setTitle("View High Scores", for: UIControlState());
 		HighScoresButton.setTitleColor(UIColor.magenta, for: UIControlState());
 		HighScoresButton.titleLabel!.font = UIFont(name:"GillSans-UltraBold", size: 20.0);
 		HighScoresButton.addTarget(self, action: #selector(ViewHighScores), for: UIControlEvents.touchUpInside);
 		
 		RestartButton = UIButton(frame: CGRect(x: 0, y: 0, width: width, height: 30));
-		RestartButton.center = CGPoint(x: width/2, y: height - (height/4) );
+		RestartButton.center = CGPoint(x: width/2, y: height - (height/3) );
 		RestartButton.setTitle("Restart Game", for: UIControlState());
 		RestartButton.setTitleColor(UIColor.magenta, for: UIControlState());
 		RestartButton.titleLabel!.font = UIFont(name:"GillSans-UltraBold", size: 20.0);
 		RestartButton.addTarget(self, action: #selector(Restart), for: UIControlEvents.touchUpInside);
 		
 		MainMenuButton = UIButton(frame: CGRect(x: 0, y: 0, width: width, height: 30));
-		MainMenuButton.center = CGPoint(x: width/2, y: height - (height/3) );
+		MainMenuButton.center = CGPoint(x: width/2, y: height - (height/5) );
 		MainMenuButton.setTitle("Return to Main Menu", for: UIControlState());
 		MainMenuButton.setTitleColor(UIColor.magenta, for: UIControlState());
 		MainMenuButton.titleLabel!.font = UIFont(name:"GillSans-UltraBold", size: 20.0);
@@ -116,7 +113,6 @@ class GameOverView : SKScene
 		view.addSubview(BackgroundImage);
 		view.addSubview(GameOverLabel);
 		view.addSubview(ScoreLabel);
-		view.addSubview(HighScoreLabel);
 		view.addSubview(HighScoresButton);
 		view.addSubview(RestartButton);
 		view.addSubview(MainMenuButton);
@@ -129,7 +125,6 @@ class GameOverView : SKScene
 		HighScoresButton.removeFromSuperview();
 		RestartButton.removeFromSuperview();
 		MainMenuButton.removeFromSuperview();
-		HighScoreLabel.removeFromSuperview();
 		ScoreLabel.removeFromSuperview();
 		GameOverLabel.removeFromSuperview();
 	}
@@ -141,7 +136,6 @@ class GameOverView : SKScene
 		HighScoresButton.removeFromSuperview();
 		RestartButton.removeFromSuperview();
 		MainMenuButton.removeFromSuperview();
-		HighScoreLabel.removeFromSuperview();
 		ScoreLabel.removeFromSuperview();
 		GameOverLabel.removeFromSuperview();
 	}
@@ -153,7 +147,6 @@ class GameOverView : SKScene
 		HighScoresButton.removeFromSuperview();
 		RestartButton.removeFromSuperview();
 		MainMenuButton.removeFromSuperview();
-		HighScoreLabel.removeFromSuperview();
 		ScoreLabel.removeFromSuperview();
 		GameOverLabel.removeFromSuperview();
 	}
