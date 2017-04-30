@@ -32,7 +32,7 @@ class GameOverView : SKScene
 		BackgroundImage.image = background;
 		
 		GameOverLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width, height: 30));
-		GameOverLabel.center = CGPoint(x: width/2, y: width/6);
+		GameOverLabel.center = CGPoint(x: width/2, y: width/5);
 		GameOverLabel.text = "GAME OVER";
 		GameOverLabel.textAlignment = NSTextAlignment.center;
 		GameOverLabel.font = UIFont(name:"GillSans-UltraBold", size: 40.0);
@@ -51,7 +51,7 @@ class GameOverView : SKScene
 		let UniquePlayerId = UserDefaults.standard;
 		let uniquePlayerId = (UniquePlayerId.value(forKey: "UniquePlayerId") as? String)!;
 		
-		if(HighScores.count == 0 || HighScores.keys.contains(uniquePlayerId))
+		if (HighScores.count == 0 || HighScores.keys.contains(uniquePlayerId))
 		{
 			HighScores.removeValue(forKey: uniquePlayerId);
 			
@@ -78,10 +78,14 @@ class GameOverView : SKScene
 			popup.addTextField ( configurationHandler: { (textField) -> Void in
 				textField.placeholder = "Enter your name";
 			});
-			
-			self.viewController?.present(popup, animated: true, completion: nil);
-		}
 		
+			let viewController = self.view?.window?.rootViewController;
+			if (viewController?.presentedViewController == nil)
+			{
+				viewController?.present(popup, animated: true, completion: nil);
+			}
+		}
+	
 		ScoreLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width, height: 60));
 		ScoreLabel.center = CGPoint(x: width/2, y: height/3);
 		ScoreLabel.text = "Score: \(Score)";

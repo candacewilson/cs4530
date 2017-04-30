@@ -19,36 +19,45 @@ struct GamePiece
 class GameView: SKScene, SKPhysicsContactDelegate
 {
 	var highScores : [String: Int] = [:];
-	var score = Int();
+	var score: Int = 0;
 	var player = SKSpriteNode(imageNamed: "pup.png");
 	var scoreLabel = UILabel();
 	var livesLabel = UILabel();
+	var levelLabel = UILabel();
 	var viewController: UIViewController?
 	var enemy: SKSpriteNode = SKSpriteNode();
 	var ammoSpawnTimer: Timer = Timer();
 	var enemySpawnTimer: Timer = Timer();
+	var spawnRate: Double = 0.7;
 	var lives: Int = 3;
+	var level: Int = 1;
+	var levelIncrease: Int = 10;
 	
 	override func didMove(to view: SKView)
 	{
 		let width = view.frame.size.width;
 		let height = view.frame.size.height;
 		
-		scoreLabel.text  = "Score: \(score)";
-		scoreLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width/2, height: height/16));
+		scoreLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width/3, height: height/16));
 		scoreLabel.backgroundColor = UIColor(red: 0.6, green: 0.1, blue: 0.1, alpha: 0.3);
+		scoreLabel.text = "Score: \(score)";
 		scoreLabel.font = UIFont(name:"GillSans-UltraBold", size: 15.0);
 		scoreLabel.textAlignment = NSTextAlignment.center;
 		scoreLabel.textColor = UIColor.white;
-		view.addSubview(scoreLabel);
 		
-		livesLabel.text  = "Lives Left: \(lives)";
-		livesLabel = UILabel(frame: CGRect(x: width/2, y: 0, width: width/2, height: height/16));
+		levelLabel = UILabel(frame: CGRect(x: width/3, y: 0, width: width/3, height: height/16));
+		levelLabel.backgroundColor = UIColor(red: 0.6, green: 0.1, blue: 0.1, alpha: 0.3);
+		levelLabel.text = "Level \(level)";
+		levelLabel.font = UIFont(name:"GillSans-UltraBold", size: 15.0);
+		levelLabel.textAlignment = NSTextAlignment.center;
+		levelLabel.textColor = UIColor.yellow;
+		
+		livesLabel = UILabel(frame: CGRect(x: width - width/3, y: 0, width: width/3, height: height/16));
 		livesLabel.backgroundColor = UIColor(red: 0.6, green: 0.1, blue: 0.1, alpha: 0.3);
+		livesLabel.text = "Lives: \(lives)";
 		livesLabel.font = UIFont(name:"GillSans-UltraBold", size: 15.0);
 		livesLabel.textAlignment = NSTextAlignment.center;
 		livesLabel.textColor = UIColor.white;
-		view.addSubview(livesLabel);
 		
 		var sortedScores : [String : Int] = [:];
 		let HighScoreDefault = UserDefaults.standard;
@@ -73,7 +82,7 @@ class GameView: SKScene, SKPhysicsContactDelegate
 		scene?.backgroundColor = UIColor.black;
 		scene?.size = CGSize(width: 640, height: 1136);
 		
-		player.position = CGPoint(x: size.width / 2, y: size.height / 5);
+		player.position = CGPoint(x: size.width / 2, y: size.height / 8);
 		player.physicsBody = SKPhysicsBody(rectangleOf: player.size);
 		player.physicsBody?.affectedByGravity = false;
 		player.physicsBody?.categoryBitMask = GamePiece.Player;
@@ -81,7 +90,7 @@ class GameView: SKScene, SKPhysicsContactDelegate
 		player.physicsBody?.isDynamic = false;
 		
 		ammoSpawnTimer = Timer.scheduledTimer(timeInterval: 0.3, target: self, selector: #selector(SpawnAmmo), userInfo: nil, repeats: true);
-		enemySpawnTimer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(SpawnEnemies), userInfo: nil, repeats: true);
+		enemySpawnTimer = Timer.scheduledTimer(timeInterval: spawnRate, target: self, selector: #selector(SpawnEnemies), userInfo: nil, repeats: true);
 		
 		addChild(player);
 		
@@ -96,6 +105,10 @@ class GameView: SKScene, SKPhysicsContactDelegate
 		emitterNode = starfieldEmitter(SKColor.gray, starSpeedY: 15, starsPerSecond: 4, starScaleFactor: 0.05);
 		emitterNode.zPosition = -12;
 		addChild(emitterNode);
+		
+		view.addSubview(scoreLabel);
+		view.addSubview(levelLabel);
+		view.addSubview(livesLabel);
 	}
 	
 	func starfieldEmitter(_ color: SKColor, starSpeedY: CGFloat, starsPerSecond: CGFloat, starScaleFactor: CGFloat) -> SKEmitterNode
@@ -157,6 +170,18 @@ class GameView: SKScene, SKPhysicsContactDelegate
 		
 		score += 1;
 		scoreLabel.text = "Score: \(score)";
+		
+		if(score == levelIncrease)
+		{
+			enemySpawnTimer.invalidate();
+			spawnRate = spawnRate * 0.8;
+			enemySpawnTimer = Timer.scheduledTimer(timeInterval: spawnRate, target: self, selector: #selector(SpawnEnemies), userInfo: nil, repeats: true);
+			
+			levelIncrease = levelIncrease + 10;
+			
+			level += 1;
+			levelLabel.text = "Level \(level)";
+		}
 	}
 	
 	func CollisionWithPlayer(_ Enemy:SKSpriteNode, Player: SKSpriteNode)
@@ -164,7 +189,7 @@ class GameView: SKScene, SKPhysicsContactDelegate
 		player.physicsBody?.categoryBitMask = 0;
 		
 		lives -= 1;
-		livesLabel.text = "Lives Left: \(lives)";
+		livesLabel.text = "Lives: \(lives)";
 
 		if(lives > 0)
 		{
@@ -274,17 +299,42 @@ class GameView: SKScene, SKPhysicsContactDelegate
 		let MinValue: CGFloat = 0;
 		let MaxValue = size.width;
 		let SpawnPoint = UInt32(MaxValue - MinValue);
+		let height = size.height;
 		
-		Enemy.position = CGPoint(x: CGFloat(arc4random_uniform(SpawnPoint)), y: size.height);
+		Enemy.position = CGPoint(x: CGFloat(arc4random_uniform(SpawnPoint)), y: height);
 		Enemy.physicsBody = SKPhysicsBody(rectangleOf: Enemy.size);
 		Enemy.physicsBody?.categoryBitMask = GamePiece.Enemy;
 		Enemy.physicsBody?.contactTestBitMask = GamePiece.Ammo;
 		Enemy.physicsBody?.affectedByGravity = false;
 		Enemy.physicsBody?.isDynamic = true;
 		
-		let action = SKAction.moveTo(y: -70, duration: 2.0);
+		let linearPath1 = SKAction.moveTo(y: height - height/3, duration: 1.0);
+		let linearPath2 = SKAction.moveTo(y: height/3, duration: 1.0);
+		
+		let highLevelPath1 = SKAction.moveTo(y: height - height/4, duration: 0.5);
+		let highLevelPath2 = SKAction.moveTo(y: height/2, duration: 0.5);
+		let highLevelPath3 = SKAction.moveTo(y: height/6, duration: 0.5);
+		
+		let circle = UIBezierPath(roundedRect: CGRect(x: 0, y: 0, width: 50, height: 50), cornerRadius: 50);
+		let circlePath = SKAction.follow(circle.cgPath, asOffset: true, orientToPath: false, duration: 0.25);
+		
+		let offScreenPathNormal = SKAction.moveTo(y: -70, duration: 2.0);
+		let offScreenPathHigherLevel = SKAction.moveTo(y: -70, duration: 0.5);
+		
 		let actionDone = SKAction.removeFromParent();
-		Enemy.run(SKAction.sequence([action, actionDone]));
+		
+		if(score < 10)
+		{
+			Enemy.run(SKAction.sequence([offScreenPathNormal, actionDone]));
+		}
+		else if (score < 20)
+		{
+			Enemy.run(SKAction.sequence([linearPath1, circlePath, linearPath2, circlePath, offScreenPathHigherLevel, actionDone]));
+		}
+		else if (score < levelIncrease)
+		{
+			Enemy.run(SKAction.sequence([highLevelPath1, circlePath, highLevelPath2, circlePath, highLevelPath3, circlePath, offScreenPathHigherLevel, actionDone]));
+		}
 		
 		addChild(Enemy);
 	}

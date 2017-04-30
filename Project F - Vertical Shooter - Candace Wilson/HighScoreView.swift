@@ -29,7 +29,7 @@ class HighScoreView : SKScene
 		let HighScoreDefault = UserDefaults.standard;
 		var listOfHighScores: String = "";
 		
-		HighScoreLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width, height: height/2));
+		HighScoreLabel = UILabel(frame: CGRect(x: 0, y: height/5, width: width, height: height/2));
 		HighScoreLabel.textAlignment = NSTextAlignment.center;
 		HighScoreLabel.font = UIFont(name:"GillSans-UltraBold", size: 20.0);
 		HighScoreLabel.numberOfLines = 0;

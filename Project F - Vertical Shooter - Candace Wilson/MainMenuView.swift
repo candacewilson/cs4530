@@ -27,7 +27,7 @@ class MainMenuView : SKScene
 		BackgroundImage.image = background;
 		
 		TitleLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width, height: height/2));
-		TitleLabel.center = CGPoint(x: width/2, y: width/6);
+		TitleLabel.center = CGPoint(x: width/2, y: height/3);
 		TitleLabel.text = "SPACE PUP";
 		TitleLabel.textAlignment = NSTextAlignment.center;
 		TitleLabel.font = UIFont(name:"GillSans-UltraBold", size: 40.0);
