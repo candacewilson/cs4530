@@ -267,6 +267,7 @@ class GameView: SKScene, SKPhysicsContactDelegate
 		enemy.removeFromParent();
 		
 		livesLabel.removeFromSuperview();
+		levelLabel.removeFromSuperview();
 		scoreLabel.removeFromSuperview();
 		
 		let gameOverView = GameOverView();
